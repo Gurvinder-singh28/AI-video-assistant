@@ -3,6 +3,7 @@ import os
 import subprocess
 from pathlib import Path
 import imageio_ffmpeg
+from yt_dlp.utils import DownloadError
 
 DOWNLOAD_DIR = "downloads"
 
@@ -29,17 +30,20 @@ def download_youtube_audio(url: str) -> str:
         "quiet": True,
     }
 
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
 
-        info = ydl.extract_info(url, download=True)
+            filename = (
+                ydl.prepare_filename(info)
+                .replace(".webm", ".wav")
+                .replace(".m4a", ".wav")
+            )
 
-        filename = (
-            ydl.prepare_filename(info)
-            .replace(".webm", ".wav")
-            .replace(".m4a", ".wav")
-        )
+        return filename
 
-    return filename
+    except DownloadError as e:
+        raise RuntimeError(f"YouTube download failed: {e}")
 
 
 def convert_to_wav(input_path: str) -> str:
