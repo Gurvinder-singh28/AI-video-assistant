@@ -14,26 +14,26 @@ def get_embeddings():
         model_kwargs = {"device" : 'cpu'}
     )
 
-def build_vector_store(transcript : str)->Chroma:
+import uuid  # add at the top with the other imports
+
+def build_vector_store(transcript: str, collection_name: str | None = None) -> Chroma:
     print("Building vector Store")
 
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size = 500,
-        chunk_overlap = 50
-    )
+    splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
     chunks = splitter.split_text(transcript)
 
     docs = [
-        Document(page_content=chunk, metadata = {'chunk_index' : i})
-        for i,chunk in enumerate(chunks)
+        Document(page_content=chunk, metadata={"chunk_index": i})
+        for i, chunk in enumerate(chunks)
     ]
 
-    embeddings = get_embeddings()
-    vector_store = Chroma.from_documents(
-        documents= docs,
-        embedding=embeddings,
-        collection_name=COLLECTION_NAME,
-        persist_directory=CHROMA_DIR
+    name = collection_name or f"{COLLECTION_NAME}_{uuid.uuid4().hex[:8]}"
+
+    return Chroma.from_documents(
+        documents=docs,
+        embedding=get_embeddings(),
+        collection_name=name,
+        persist_directory=CHROMA_DIR,
     )
 
     return vector_store

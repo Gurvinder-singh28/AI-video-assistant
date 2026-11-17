@@ -1,29 +1,25 @@
-streamlit>=1.45,<2.0
+# Web app (FastAPI backend + static HTML/CSS/JS frontend)
+fastapi
+uvicorn[standard]
+python-multipart
 python-dotenv>=1.1.0
+httpx
 
-# LangChain
-langchain-core>=0.3.66,<1.0
-langchain-mistralai>=0.2.10
+# LangChain + Groq LLM
+langchain-core>=0.3.66
+langchain-groq
 langchain-text-splitters>=0.3.8
 
-# Vector database / embeddings
+# Vector database / embeddings (RAG chat)
 langchain-chroma>=0.2.4
 langchain-huggingface>=0.3.0
 chromadb>=1.0.15
 sentence-transformers>=4.1.0
 
-# Mistral
-mistralai>=1.9.3
-
-# YouTube / audio
-yt-dlp
-imageio-ffmpeg>=0.6.0
-
-# Whisper / transcription
+# Audio / transcription
 openai-whisper
 torch>=2.7.0
 torchaudio>=2.7.0
-
-# Supporting packages
+imageio-ffmpeg>=0.6.0
+yt-dlp
 numpy>=2.2.0
-sentence-transformers
