@@ -1,25 +1,21 @@
-# Web app (FastAPI backend + static HTML/CSS/JS frontend)
+# Web app
 fastapi
 uvicorn[standard]
 python-multipart
 python-dotenv>=1.1.0
 httpx
 
-# LangChain + Groq LLM
+# LangChain + Groq (LLM and speech-to-text)
 langchain-core>=0.3.66
 langchain-groq
 langchain-text-splitters>=0.3.8
+groq
 
-# Vector database / embeddings (RAG chat)
+# Vector database (RAG chat), no torch needed
 langchain-chroma>=0.2.4
-langchain-huggingface>=0.3.0
 chromadb>=1.0.15
-sentence-transformers>=4.1.0
 
-# Audio / transcription
-openai-whisper
-torch>=2.7.0
-torchaudio>=2.7.0
+# Audio
 imageio-ffmpeg>=0.6.0
 yt-dlp
 numpy>=2.2.0

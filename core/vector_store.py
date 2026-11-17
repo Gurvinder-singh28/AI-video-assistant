@@ -1,23 +1,40 @@
-import os 
-from langchain_chroma import Chroma 
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+import uuid
+
+from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
+from langchain_chroma import Chroma
 from langchain_core.documents import Document
+from langchain_core.embeddings import Embeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 CHROMA_DIR = "vector_db"
 COLLECTION_NAME = "meeting_transcript"
-EMBEDDING_MODEL  = "all-MiniLM-L6-v2"
+
+
+class OnnxEmbeddings(Embeddings):
+    """Same all-MiniLM-L6-v2 model, but runs on onnxruntime: no torch, low memory."""
+
+    def __init__(self):
+        self._fn = DefaultEmbeddingFunction()
+
+    def embed_documents(self, texts):
+        return [[float(x) for x in vec] for vec in self._fn(list(texts))]
+
+    def embed_query(self, text):
+        return self.embed_documents([text])[0]
+
+
+_embeddings = None
+
 
 def get_embeddings():
-    return HuggingFaceEmbeddings(
-        model_name = EMBEDDING_MODEL,
-        model_kwargs = {"device" : 'cpu'}
-    )
+    global _embeddings
+    if _embeddings is None:
+        _embeddings = OnnxEmbeddings()
+    return _embeddings
 
-import uuid  # add at the top with the other imports
 
-def build_vector_store(transcript: str, collection_name: str | None = None) -> Chroma:
-    print("Building vector Store")
+def build_vector_store(transcript: str) -> Chroma:
+    print("Building vector store", flush=True)
 
     splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
     chunks = splitter.split_text(transcript)
@@ -27,31 +44,13 @@ def build_vector_store(transcript: str, collection_name: str | None = None) -> C
         for i, chunk in enumerate(chunks)
     ]
 
-    name = collection_name or f"{COLLECTION_NAME}_{uuid.uuid4().hex[:8]}"
-
     return Chroma.from_documents(
         documents=docs,
         embedding=get_embeddings(),
-        collection_name=name,
+        collection_name=f"{COLLECTION_NAME}_{uuid.uuid4().hex[:8]}",
         persist_directory=CHROMA_DIR,
     )
 
-    return vector_store
 
-
-
-def load_vector_store() ->Chroma:
-    embeddings = get_embeddings()
-    vector_store = Chroma(
-        collection_name=COLLECTION_NAME,
-        embedding_function= embeddings,
-        persist_directory=CHROMA_DIR
-    )
-
-    return vector_store
-
-def get_retriever(vector_store : Chroma, k :int = 4):
-    return vector_store.as_retriever(
-        search_type = 'similarity',
-        search_kwargs = {"k":k}
-    )
+def get_retriever(vector_store: Chroma, k: int = 4):
+    return vector_store.as_retriever(search_type="similarity", search_kwargs={"k": k})
